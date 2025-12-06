@@ -10,7 +10,7 @@ on:
       test_type:
         description: "Tipo de teste (smoke | load | stress)"
         required: false
-        default: "stress"
+        default: "smoke"
 
 jobs:
   k6-tests:
