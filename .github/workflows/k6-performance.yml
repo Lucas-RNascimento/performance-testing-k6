@@ -1,0 +1,51 @@
+name: K6 Performance Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: "Choose test type: smoke | load | stress"
+        required: true
+        default: "smoke"
+
+jobs:
+  k6-tests:
+    runs-on: ubuntu-latest
+
+    env:
+      BASE_URL: https://test-api.k6.io
+      ENDPOINT: /public/crocodiles/
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install k6
+        run: |
+          sudo apt update
+          sudo apt install -y gnupg2 ca-certificates
+          curl -s https://repo.k6.io/key.gpg | sudo apt-key add -
+          echo "deb https://repo.k6.io/apt stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt update
+          sudo apt install -y k6
+
+      - name: Create results folder
+        run: mkdir -p results
+
+      - name: Determine test type
+        run: echo "TEST_TYPE=${{ github.event.inputs.test_type || 'smoke' }}" >> $GITHUB_ENV
+
+      - name: Run K6 Test
+        run: |
+          echo "Running TEST_TYPE=$TEST_TYPE"
+          k6 run \
+            --summary-export=results/cli_summary.json \
+            test_k6.js
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results-${{ github.event.inputs.test_type || 'smoke' }}
+          path: results/
