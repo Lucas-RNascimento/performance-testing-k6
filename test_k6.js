@@ -103,12 +103,15 @@ export default function () {
   sleep(1);
 }
 
-// handleSummary writes JSON + HTML report files into ./results
 export function handleSummary(data) {
-  // ensure folder exists (k6 will create automatically usually, but safe)
-  // return object of path->content
-  return {
-    "results/summary.json": JSON.stringify(data, null, 2),
-    "results/summary.html": htmlReport(data)
-  };
+    return {
+        "results/summary.json": JSON.stringify(data),           // JSON
+        "results/summary.html": htmlReport(data),               // HTML
+        stdout: JSON.stringify({
+            metrics: {
+                http_reqs: data.metrics.http_reqs,
+                http_req_duration: data.metrics.http_req_duration,
+            }
+        }, null, 2),
+    };
 }
