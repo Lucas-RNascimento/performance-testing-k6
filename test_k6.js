@@ -104,21 +104,31 @@ export default function () {
 }
 
 export function handleSummary(data) {
+    // Detecta CI (GitHub Actions)
+    const runningInCI = __ENV.CI === "true";
+
+    // -> No CI: NÃO gerar HTML, apenas JSON
+    if (runningInCI) {
+        return {
+            "results/summary.json": JSON.stringify(data, null, 2),
+            stdout: JSON.stringify(
+                {
+                    info: "Running inside CI, HTML report disabled",
+                    metrics: {
+                        http_reqs: data.metrics.http_reqs,
+                        http_req_duration: data.metrics.http_req_duration
+                    }
+                },
+                null,
+                2
+            )
+        };
+    }
+
+    // -> LOCAL: gerar HTML normalmente
     return {
-        // Arquivos de saída (ok no GitHub Actions)
         "results/summary.json": JSON.stringify(data, null, 2),
         "results/summary.html": htmlReport(data),
-
-        // Não imprimir HTML no console!
-        stdout: JSON.stringify(
-            {
-                metrics: {
-                    http_reqs: data.metrics.http_reqs,
-                    http_req_duration: data.metrics.http_req_duration
-                }
-            },
-            null,
-            2
-        )
+        stdout: "HTML report generated: results/summary.html"
     };
 }
