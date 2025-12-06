@@ -1,13 +1,11 @@
-name: K6 Performance Tests
+name: k6 Performance Tests
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
     inputs:
       test_type:
-        description: "Choose test type: smoke | load | stress"
-        required: true
+        description: "Tipo de teste (smoke | load | stress)"
+        required: false
         default: "smoke"
 
 jobs:
@@ -15,37 +13,47 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CI: "true"
-      BASE_URL: https://test-api.k6.io
-      ENDPOINT: /public/crocodiles/
+      CI: "true"                        # evita HTML no CI
+      TEST_TYPE: ${{ github.event.inputs.test_type }}
+      BASE_URL: "https://test-api.k6.io"
+      ENDPOINT: "/public/crocodiles/"
 
     steps:
+      # ------------------------------
+      # Checkout
+      # ------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
+      # ------------------------------
+      # Instalação segura do k6 (sem APT, sem key)
+      # ------------------------------
       - name: Install k6
         run: |
-            curl -sSL https://github.com/grafana/k6/releases/download/v0.51.0/k6-v0.51.0-linux-amd64.tar.gz -o k6.tar.gz
-            tar -xzf k6.tar.gz
-            sudo mv k6-v0.51.0-linux-amd64/k6 /usr/local/bin/k6
-            k6 version
+          curl -sSL https://github.com/grafana/k6/releases/download/v0.51.0/k6-v0.51.0-linux-amd64.tar.gz -o k6.tar.gz
+          tar -xzf k6.tar.gz
+          sudo mv k6-v0.51.0-linux-amd64/k6 /usr/local/bin/k6
+          k6 version
 
-
+      # ------------------------------
+      # Criar pasta para resultados
+      # ------------------------------
       - name: Create results folder
         run: mkdir -p results
 
-      - name: Determine test type
-        run: echo "TEST_TYPE=${{ github.event.inputs.test_type || 'smoke' }}" >> $GITHUB_ENV
-
-      - name: Run K6 Test
+      # ------------------------------
+      # Rodar o Script próprio do CI
+      # ------------------------------
+      - name: Run k6 performance test (CI version)
         run: |
           echo "Running TEST_TYPE=$TEST_TYPE"
-          k6 run \
-            --summary-export=results/cli_summary.json \
-            test_k6.js
+          k6 run test_k6_ci.js
 
-      - name: Upload Results
+      # ------------------------------
+      # Upload do JSON como artifact
+      # ------------------------------
+      - name: Upload k6 results
         uses: actions/upload-artifact@v4
         with:
-          name: k6-results-${{ github.event.inputs.test_type || 'smoke' }}
-          path: results/
+          name: k6-results
+          path: results/summary.json
