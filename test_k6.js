@@ -105,13 +105,20 @@ export default function () {
 
 export function handleSummary(data) {
     return {
-        "results/summary.json": JSON.stringify(data),           // JSON
-        "results/summary.html": htmlReport(data),               // HTML
-        stdout: JSON.stringify({
-            metrics: {
-                http_reqs: data.metrics.http_reqs,
-                http_req_duration: data.metrics.http_req_duration,
-            }
-        }, null, 2),
+        // Arquivos de saída (ok no GitHub Actions)
+        "results/summary.json": JSON.stringify(data, null, 2),
+        "results/summary.html": htmlReport(data),
+
+        // Não imprimir HTML no console!
+        stdout: JSON.stringify(
+            {
+                metrics: {
+                    http_reqs: data.metrics.http_reqs,
+                    http_req_duration: data.metrics.http_req_duration
+                }
+            },
+            null,
+            2
+        )
     };
 }
