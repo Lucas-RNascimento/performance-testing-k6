@@ -24,12 +24,11 @@ jobs:
 
       - name: Install k6
         run: |
-          sudo apt update
-          sudo apt install -y gnupg2 ca-certificates
-          curl -s https://repo.k6.io/key.gpg | sudo apt-key add -
-          echo "deb https://repo.k6.io/apt stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt update
-          sudo apt install -y k6
+            curl -sSL https://github.com/grafana/k6/releases/download/v0.51.0/k6-v0.51.0-linux-amd64.tar.gz -o k6.tar.gz
+            tar -xzf k6.tar.gz
+            sudo mv k6-v0.51.0-linux-amd64/k6 /usr/local/bin/k6
+            k6 version
+
 
       - name: Create results folder
         run: mkdir -p results
