@@ -1,6 +1,10 @@
 name: k6 Performance Tests
 
 on:
+  push:
+    branches:
+      - main
+
   workflow_dispatch:
     inputs:
       test_type:

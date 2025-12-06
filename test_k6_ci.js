@@ -18,7 +18,12 @@ const profiles = {
   stress:{ options: { vus: 50, duration: "30s" } }
 };
 
-export let options = profiles[TEST_TYPE]?.options || profiles.smoke.options;
+// ❗ k6 NÃO suporta optional chaining (?.)
+// então usamos essa forma:
+export let options =
+  profiles[TEST_TYPE] && profiles[TEST_TYPE].options
+    ? profiles[TEST_TYPE].options
+    : profiles.smoke.options;
 
 function url(path) {
   return `${BASE_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
@@ -26,13 +31,16 @@ function url(path) {
 
 export default function () {
   const res = http.get(url(ENDPOINT), getHeaders());
-  check(res, { "status is 200": (r) => r.status === 200 });
+  check(res, {
+    "status is 200": (r) => r.status === 200,
+    "body not empty": (r) => r.body && r.body.length > 0
+  });
   sleep(1);
 }
 
-// CI: apenas JSON
+// CI version → SOMENTE JSON
 export function handleSummary(data) {
   return {
-    "results/summary.json": JSON.stringify(data),
+    "results/summary.json": JSON.stringify(data, null, 2),
   };
 }
